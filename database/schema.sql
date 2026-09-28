@@ -1,0 +1,52 @@
+CREATE DATABASE IF NOT EXISTS zalo_crm
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE zalo_crm;
+
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(191) NOT NULL UNIQUE,
+  display_name VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS zalo_accounts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  zalo_user_id VARCHAR(100) NOT NULL,
+  zalo_name VARCHAR(255) NULL,
+  credential_ciphertext LONGTEXT NULL,
+  status ENUM('CONNECTED','DISCONNECTED','EXPIRED','LOGIN_PENDING') NOT NULL DEFAULT 'DISCONNECTED',
+  last_connected_at DATETIME NULL,
+  last_error TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uq_zalo_user_id (zalo_user_id),
+  CONSTRAINT fk_zalo_account_user
+    FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS customers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  zalo_account_id BIGINT UNSIGNED NOT NULL,
+  zalo_user_id VARCHAR(100) NOT NULL,
+  display_name VARCHAR(255) NULL,
+  phone VARCHAR(40) NULL,
+  avatar_url TEXT NULL,
+  first_interaction_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_interaction_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  UNIQUE KEY uq_customer_account_user (zalo_account_id, zalo_user_id),
+  KEY idx_customer_phone (phone),
+  KEY idx_customer_last_interaction (last_interaction_at),
+
+  CONSTRAINT fk_customer_zalo_account
+    FOREIGN KEY (zalo_account_id) REFERENCES zalo_accounts(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB;

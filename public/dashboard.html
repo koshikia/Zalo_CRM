@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zalo CRM - Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">Zalo CRM</div>
+      <nav>
+        <a class="active" href="/dashboard">Dashboard</a>
+        <a href="#">Khách hàng</a>
+        <a href="#">Chiến dịch</a>
+        <a href="#">Theo dõi gửi</a>
+        <a href="#">Cài đặt</a>
+      </nav>
+      <button id="logout-btn" class="logout">Đăng xuất</button>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="muted">Quản lý tài khoản Zalo và khách hàng tương tác.</p>
+        </div>
+        <div id="account-status" class="badge">...</div>
+      </header>
+
+      <section class="cards">
+        <article class="card">
+          <span>Tổng khách hàng</span>
+          <strong id="total-customers">0</strong>
+        </article>
+        <article class="card">
+          <span>Khách mới hôm nay</span>
+          <strong id="today-customers">0</strong>
+        </article>
+        <article class="card">
+          <span>Chiến dịch</span>
+          <strong>0</strong>
+        </article>
+        <article class="card">
+          <span>Tài khoản Zalo</span>
+          <strong id="zalo-name">-</strong>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Khách hàng gần đây</h2>
+          <span>Không lưu nội dung tin nhắn</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tên</th>
+                <th>Zalo ID</th>
+                <th>Số điện thoại</th>
+                <th>Tương tác gần nhất</th>
+              </tr>
+            </thead>
+            <tbody id="customer-list">
+              <tr><td colspan="4">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

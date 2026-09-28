@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zalo CRM - Đăng nhập</title>
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <main class="login-card">
+    <div class="brand">Zalo CRM</div>
+    <h1>Đăng nhập</h1>
+    <p class="muted">Quét mã QR bằng ứng dụng Zalo để kết nối tài khoản.</p>
+
+    <div id="qr-box" class="qr-box hidden">
+      <img id="qr-image" alt="Zalo QR">
+    </div>
+
+    <div id="status" class="status">Đang kiểm tra phiên đăng nhập...</div>
+
+    <button id="login-btn" class="primary" disabled>Đăng nhập bằng QR</button>
+  </main>
+
+  <script src="/js/login.js"></script>
+</body>
+</html>
