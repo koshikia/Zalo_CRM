@@ -81,17 +81,3 @@ Khách nhắn -> listener -> getUserInfo -> upsert customers.
 
 Nội dung message không được ghi vào database.
 
-## Production
-
-Trước khi public internet cần bổ sung:
-- HTTPS.
-- reverse proxy.
-- CSRF protection.
-- rate limiting.
-- authentication/authorization đầy đủ nếu có nhiều nhân viên.
-- Redis/session store thay cho cookie-session.
-- secrets manager/KMS thay cho `.env`.
-- backup MySQL.
-- logging/monitoring.
-- job queue cho campaign.
-- cơ chế lock để chỉ một listener chạy cho một Zalo account.
