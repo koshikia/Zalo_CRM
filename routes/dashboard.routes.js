@@ -37,7 +37,7 @@ router.get("/customers", async (req, res) => {
   if (!accountId) return res.status(401).json({ message: "Unauthorized" });
 
   const [rows] = await db.query(
-    `SELECT id, zalo_user_id, display_name, phone, avatar_url,
+    `SELECT id, zalo_user_id, display_name, phone,
             first_interaction_at, last_interaction_at
      FROM customers
      WHERE zalo_account_id=?

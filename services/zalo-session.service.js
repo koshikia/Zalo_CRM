@@ -261,38 +261,62 @@ class ZaloSessionService {
     if (this.has(accountId)) return;
 
     api.listener.on("message", async (message) => {
-      try {
-        if (message?.isSelf) return;
+    try {
+        if (message?.isSelf) {
+            return;
+        }
 
-        // Only direct messages; group messages are deliberately ignored.
         const ThreadType = (await import("zca-js")).ThreadType;
-        if (message?.type !== ThreadType.User) return;
+
+        // Chỉ xử lý hội thoại cá nhân
+        if (message?.type !== ThreadType.User) {
+            return;
+        }
 
         const zaloUserId = String(message.threadId);
+
         let info = {};
 
-        // The library exposes getUserInfo in current releases.
-        // If it fails/rate-limits, we still keep the Zalo ID and interaction time.
         try {
-          info = normalizeUserInfo(await api.getUserInfo(zaloUserId));
+            const rawInfo = await api.getUserInfo(zaloUserId);
+
+            console.log(
+                  "[ZALO] getUserInfo RAW:",
+                  JSON.stringify(rawInfo, null, 2)
+            );
+
+            info = normalizeUserInfo(rawInfo);
+
+            console.log(
+                  "[ZALO] normalized user info:",
+                  info
+            );
+
         } catch (error) {
-          console.warn(`[ZALO] getUserInfo(${zaloUserId}) failed: ${error.message}`);
+              console.warn(
+                  `[ZALO] getUserInfo(${zaloUserId}) failed:`,
+                  error.message
+            );
         }
 
         await upsertCustomer({
-          zaloAccountId: accountId,
-          zaloUserId,
-          displayName: info.displayName,
-          phone: info.phone,
-          avatarUrl: info.avatarUrl
+            zaloAccountId: accountId,
+            zaloUserId,
+            displayName: info.displayName,
+            phone: info.phone
         });
 
-        // Intentionally do NOT persist message.data.content.
-        console.log(`[ZALO] customer interaction captured: ${zaloUserId}`);
-      } catch (error) {
-        console.error("[ZALO] message handler error:", error);
-      }
-    });
+        console.log(
+            `[ZALO] Customer captured: ${zaloUserId} - ${info.displayName || "Unknown"}`
+        );
+
+    } catch (error) {
+        console.error(
+            "[ZALO] message handler error:",
+            error
+        );
+    }
+});
 
     api.listener.on("disconnected", async (reason) => {
       console.warn(`[ZALO] account ${accountId} disconnected`, reason);
