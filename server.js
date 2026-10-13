@@ -7,6 +7,7 @@ import fs from "node:fs";
 import db, { pingDatabase } from "./config/database.js";
 import zaloRoutes from "./routes/zalo.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import campaignRoutes from "./routes/campaign.routes.js";
 import { requireAuth } from "./middleware/auth.middleware.js";
 import zaloSession from "./services/zalo-session.service.js";
 
@@ -33,10 +34,14 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/storage", express.static(path.join(__dirname, "storage")));
 app.use("/api/zalo", zaloRoutes);
 app.use("/api/dashboard", requireAuth, dashboardRoutes);
+app.use("/api/campaigns", requireAuth, campaignRoutes);
 
-app.get("/dashboard", (req, res) => {
-  if (!req.session?.accountId) return res.redirect("/");
-  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+app.get("/dashboard", requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+app.get("/campaigns", requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "campaigns.html"));
 });
 
 app.get("/", (req, res) => {

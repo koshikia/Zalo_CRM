@@ -111,6 +111,8 @@ CREATE TABLE IF NOT EXISTS campaigns (
     ) NOT NULL DEFAULT 'DRAFT',
 
     scheduled_at DATETIME NULL,
+    delay_minutes INT UNSIGNED NOT NULL DEFAULT 0,
+    interval_seconds INT UNSIGNED NOT NULL DEFAULT 10,
 
     started_at DATETIME NULL,
     completed_at DATETIME NULL,
@@ -135,7 +137,7 @@ CREATE TABLE IF NOT EXISTS campaign_customers (
     campaign_id BIGINT UNSIGNED NOT NULL,
     customer_id BIGINT UNSIGNED NOT NULL,
 
-    status ENUM(
+    send_status ENUM(
         'PENDING',
         'SENDING',
         'SENT',
@@ -143,8 +145,22 @@ CREATE TABLE IF NOT EXISTS campaign_customers (
         'SKIPPED'
     ) NOT NULL DEFAULT 'PENDING',
 
-    sent_at DATETIME NULL,
+    view_status ENUM(
+        'UNKNOWN',
+        'VIEWED',
+        'NOT_VIEWED',
+        'BLOCKED'
+    ) NOT NULL DEFAULT 'UNKNOWN',
 
+    reply_status ENUM(
+        'UNKNOWN',
+        'REPLIED',
+        'NOT_REPLIED'
+    ) NOT NULL DEFAULT 'UNKNOWN',
+
+    sent_at DATETIME NULL,
+    viewed_at DATETIME NULL,
+    replied_at DATETIME NULL,
     error_message TEXT NULL,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -156,7 +172,7 @@ CREATE TABLE IF NOT EXISTS campaign_customers (
         customer_id
     ),
 
-    KEY idx_campaign_customer_status (status),
+    KEY idx_campaign_customer_status (send_status),
     KEY idx_campaign_customer_customer (customer_id),
 
     CONSTRAINT fk_cc_campaign

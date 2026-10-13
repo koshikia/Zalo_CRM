@@ -26,26 +26,57 @@ class ZaloSessionModel {
   }
 
   async restoreAll() {
+    // Chỉ khôi phục đúng 1 tài khoản CONNECTED gần nhất.
+    // Tài khoản đã logout sẽ có status=DISCONNECTED nên không được restore.
     const rows = await findRestorableAccounts();
+    const row = rows[0];
 
-    for (const row of rows) {
-      try {
-        const credentials = decryptCredentials(row.credential_ciphertext);
-        await this.loginWithCredentials(
-          row.id,
-          row.user_id,
-          credentials,
-          false
-        );
-        console.log(`[ZALO] restored account ${row.id}`);
-      } catch (error) {
-        console.error(
-          `[ZALO] restore failed for account ${row.id}:`,
-          error.message
-        );
-        await markStatus(row.id, "EXPIRED", error.message);
-      }
+    if (!row) {
+      console.log("[ZALO] Không có tài khoản CONNECTED để restore session.");
+      return;
     }
+
+    try {
+      const credentials = decryptCredentials(row.credential_ciphertext);
+      await this.loginWithCredentials(
+        row.id,
+        row.user_id,
+        credentials,
+        false
+      );
+      console.log(`[ZALO] restored latest account ${row.id}`);
+    } catch (error) {
+      console.error(
+        `[ZALO] restore failed for account ${row.id}:`,
+        error.message
+      );
+      await markStatus(row.id, "EXPIRED", error.message);
+    }
+  }
+
+  async logout(accountId) {
+    const key = String(accountId);
+    const session = this.sessions.get(key);
+
+    // Xóa session trong RAM trước để API không thể dùng lại session cũ.
+    this.sessions.delete(key);
+
+    // Dừng listener WebSocket nếu session đang chạy.
+    try {
+      if (session?.api?.listener) {
+        session.api.listener.stop();
+      }
+    } catch (error) {
+      console.warn(
+        `[ZALO] stop listener for account ${accountId} failed:`,
+        error.message
+      );
+    }
+
+    // Quan trọng: giữ credential nhưng đánh dấu DISCONNECTED.
+    // restoreAll() chỉ restore status=CONNECTED nên account này sẽ không
+    // được tự động đăng nhập lại sau khi server restart.
+    await markStatus(accountId, "DISCONNECTED", null);
   }
 
   async startQrLogin() {

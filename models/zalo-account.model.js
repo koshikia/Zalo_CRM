@@ -27,7 +27,10 @@ export async function findRestorableAccounts() {
   const [rows] = await db.query(`
     SELECT id, user_id, zalo_user_id, zalo_name, credential_ciphertext
     FROM zalo_accounts
-    WHERE credential_ciphertext IS NOT NULL
+    WHERE status='CONNECTED'
+      AND credential_ciphertext IS NOT NULL
+    ORDER BY last_connected_at DESC
+    LIMIT 1
   `);
   return rows;
 }

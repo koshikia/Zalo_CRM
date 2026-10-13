@@ -137,14 +137,20 @@ export async function claimSession(req, res) {
 
 export async function logout(req, res) {
   try {
-    const accountId = req.session.accountId;
-    req.session = null;
+    const accountId = req.session?.accountId;
 
     if (accountId) {
-      await markStatus(accountId, "DISCONNECTED", null);
+      await zaloSession.logout(accountId);
     }
 
-    return res.json({ success: true });
+    // Xóa session HTTP sau khi đã xử lý session Zalo.
+    req.session = null;
+
+    return res.json({
+      success: true,
+      accountId: accountId ?? null,
+      status: "DISCONNECTED"
+    });
   } catch (error) {
     console.error("[LOGOUT ERROR]", error);
     return res.status(500).json({

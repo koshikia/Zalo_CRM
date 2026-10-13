@@ -9,17 +9,21 @@
 <body>
   <div class="app">
     <aside class="sidebar">
-      <div class="brand">Zalo CRM</div>
-      <nav>
-        <a class="active" href="/dashboard">Dashboard</a>
-        <a href="#">Khách hàng</a>
-        <a href="#">Chiến dịch</a>
-        <a href="#">Theo dõi gửi</a>
-        <a href="#">Cài đặt</a>
+      <div class="sidebar-logo">
+        <h2>Zalo CRM</h2>
+      </div>
+
+      <nav class="sidebar-menu">
+        <a href="/dashboard" class="menu-item active">
+          <span>Dashboard</span>
+        </a>
+
+        <a href="/campaigns" class="menu-item">
+          <span>Chiến dịch</span>
+        </a>
       </nav>
       <button id="logout-btn" class="logout">Đăng xuất</button>
     </aside>
-
     <main class="content">
       <header class="topbar">
         <div>

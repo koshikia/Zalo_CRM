@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zalo CRM - Chiến dịch</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/campaigns.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+        <h2>Zalo CRM</h2>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a href="/dashboard" class="menu-item">
+        <span>Dashboard</span>
+      </a>
+
+      <a href="/campaigns" class="menu-item active">
+        <span>Chiến dịch</span>
+      </a>
+    </nav>
+    <button id="logout-btn" class="logout">Đăng xuất</button>
+  </aside>
+
+  <main class="content">
+    <header class="topbar campaign-topbar">
+      <div>
+        <h1>Chiến dịch</h1>
+        <p class="muted">Tạo, lên lịch và theo dõi hiệu quả chiến dịch gửi tin.</p>
+      </div>
+      <button id="new-campaign" class="primary-btn">＋ Tạo chiến dịch</button>
+    </header>
+
+    <section class="campaign-summary">
+      <article class="summary-card"><span>Tổng chiến dịch</span><strong id="summary-total">0</strong></article>
+      <article class="summary-card"><span>Đã gửi</span><strong id="summary-sent">0</strong></article>
+      <article class="summary-card"><span>Khách đã trả lời</span><strong id="summary-replied">0</strong></article>
+      <article class="summary-card"><span>Chưa xem</span><strong id="summary-unread">0</strong></article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header campaign-list-head">
+        <h2>Danh sách chiến dịch</h2>
+        <div class="filter-row">
+          <input id="search-campaign" type="search" placeholder="Tìm tên chiến dịch...">
+          <select id="status-filter">
+            <option value="">Tất cả trạng thái</option>
+            <option value="DRAFT">Bản nháp</option>
+            <option value="SCHEDULED">Đã lên lịch</option>
+            <option value="RUNNING">Đang chạy</option>
+            <option value="COMPLETED">Hoàn thành</option>
+            <option value="CANCELLED">Đã hủy</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="campaign-table">
+          <thead><tr>
+            <th>Chiến dịch</th><th>Trạng thái</th><th>Khách nhận</th>
+            <th>Đã trả lời</th><th>Đã xem</th><th>Chưa xem</th><th>Không gửi được</th><th>Thời gian gửi</th><th>Thao tác</th>
+          </tr></thead>
+          <tbody id="campaign-list"><tr><td colspan="9">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+      <p class="footnote">Lưu ý: trạng thái “chưa xem” không chứng minh khách hàng đã chặn tài khoản. Chỉ đánh dấu “bị chặn” khi có tín hiệu đáng tin cậy từ Zalo.</p>
+    </section>
+
+    <div id="editor-backdrop" class="modal-backdrop hidden">
+      <section class="campaign-modal" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+        <div class="modal-head">
+          <div><h2 id="editor-title">Tạo chiến dịch</h2><p class="muted">Soạn nội dung và chọn khách hàng nhận tin.</p></div>
+          <button type="button" id="close-editor" class="icon-btn" aria-label="Đóng">×</button>
+        </div>
+        <form id="campaign-form">
+          <input type="hidden" id="campaign-id">
+          <label for="campaign-name">Tên chiến dịch</label>
+          <input id="campaign-name" maxlength="255" required placeholder="Ví dụ: Ưu đãi tháng 10">
+          <label for="campaign-content">Nội dung tin nhắn</label>
+          <textarea id="campaign-content" rows="5" required placeholder="Nhập nội dung sẽ gửi cho khách hàng..."></textarea>
+          <div class="schedule-grid">
+            <div><label for="delay-minutes">Bắt đầu gửi sau khi tạo (phút)</label><input id="delay-minutes" type="number" min="0" max="525600" value="0" required></div>
+            <div><label for="interval-seconds">Khoảng cách giữa mỗi khách (giây)</label><input id="interval-seconds" type="number" min="1" max="86400" value="10" required></div>
+          </div>
+          <div class="recipient-header">
+            <div><label>Chọn khách hàng nhận tin</label><span id="selected-count">0 khách được chọn</span></div>
+            <input id="search-customer" type="search" placeholder="Tìm theo tên, số điện thoại, Zalo ID">
+          </div>
+          <div class="recipient-tools">
+            <label class="check-all"><input type="checkbox" id="select-all"> Chọn tất cả kết quả</label>
+            <span id="customer-count" class="muted">0 khách hàng</span>
+          </div>
+          <div id="customer-picker" class="customer-picker"><p>Đang tải khách hàng...</p></div>
+          <p id="form-message" class="form-message" role="status"></p>
+          <div class="modal-actions">
+            <button type="button" id="cancel-editor" class="secondary-btn">Hủy</button>
+            <button type="submit" id="save-campaign" class="primary-btn">Lưu chiến dịch</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="/js/campaigns.js"></script>
+</body>
+</html>
