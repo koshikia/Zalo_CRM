@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Chi tiết chiến dịch - Zalo CRM</title>
+
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="/css/campaign-detail.css">
+</head>
+
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Zalo CRM</h2>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a href="/dashboard" class="menu-item">
+        <span>Dashboard</span>
+      </a>
+
+      <a href="/campaigns" class="menu-item active">
+        <span>Chiến dịch</span>
+      </a>
+    </nav>
+
+    <button id="logout-btn" class="logout">
+      Đăng xuất
+    </button>
+  </aside>
+
+  <main class="content">
+
+    <header class="detail-header">
+      <div>
+        <a href="/campaigns" class="back-link">
+          ← Quay lại danh sách chiến dịch
+        </a>
+
+        <h1 id="campaign-name">Đang tải chiến dịch...</h1>
+
+        <p id="campaign-description" class="muted"></p>
+      </div>
+
+      <button type="button" id="create-followup" class="primary-btn" disabled>
+        + Tạo chiến dịch chăm sóc lại
+      </button>
+    </header>
+
+    <section id="campaign-information" class="detail-summary">
+      <article class="detail-card">
+        <span>Tổng khách hàng</span>
+        <strong id="total-count">0</strong>
+      </article>
+
+      <article class="detail-card">
+        <span>Đã gửi</span>
+        <strong id="sent-count">0</strong>
+      </article>
+
+      <article class="detail-card">
+        <span>Đã xem</span>
+        <strong id="viewed-count">0</strong>
+      </article>
+
+      <article class="detail-card">
+        <span>Đã phản hồi</span>
+        <strong id="replied-count">0</strong>
+      </article>
+
+      <article class="detail-card">
+        <span>Chưa xem</span>
+        <strong id="not-viewed-count">0</strong>
+      </article>
+
+      <article class="detail-card">
+        <span>Gửi thất bại</span>
+        <strong id="failed-count">0</strong>
+      </article>
+    </section>
+
+    <section class="panel detail-panel">
+
+      <div class="detail-toolbar">
+        <div>
+          <h2>Danh sách khách hàng</h2>
+          <p class="muted">
+            Lọc theo trạng thái, chọn khách hàng rồi tạo chiến dịch chăm sóc lại.
+          </p>
+        </div>
+
+        <input
+          id="search-customer"
+          type="search"
+          placeholder="Tìm tên, số điện thoại hoặc Zalo ID"
+        >
+      </div>
+
+      <div class="status-filters" id="status-filters">
+        <button type="button" class="filter-btn active" data-filter="ALL">
+          Tất cả
+        </button>
+
+        <button type="button" class="filter-btn" data-filter="REPLIED">
+          Đã phản hồi
+        </button>
+
+        <button type="button" class="filter-btn" data-filter="VIEWED">
+          Đã xem
+        </button>
+
+        <button type="button" class="filter-btn" data-filter="NOT_VIEWED">
+          Chưa xem
+        </button>
+
+        <button type="button" class="filter-btn" data-filter="FAILED">
+          Gửi thất bại
+        </button>
+
+        <button type="button" class="filter-btn" data-filter="PENDING">
+          Chờ gửi
+        </button>
+      </div>
+
+      <div class="selection-toolbar">
+        <label>
+          <input type="checkbox" id="select-visible">
+          Chọn tất cả khách đang hiển thị
+        </label>
+
+        <span id="selection-count">Đã chọn 0 khách</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Chọn</th>
+              <th>Khách hàng</th>
+              <th>Số điện thoại</th>
+              <th>Zalo ID</th>
+              <th>Trạng thái gửi</th>
+              <th>Trạng thái xem</th>
+              <th>Phản hồi</th>
+              <th>Thời gian gửi</th>
+              <th>Thời gian xem</th>
+              <th>Thời gian phản hồi</th>
+              <th>Lỗi gửi</th>
+            </tr>
+          </thead>
+
+          <tbody id="recipient-list">
+            <tr>
+              <td colspan="11">Đang tải dữ liệu...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="page-message" role="status"></div>
+
+  </main>
+</div>
+
+<script src="/js/campaign-detail.js"></script>
+</body>
+</html>

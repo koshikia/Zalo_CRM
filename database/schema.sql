@@ -63,36 +63,6 @@ CREATE TABLE IF NOT EXISTS customers (
         ON DELETE CASCADE
 
 ) ENGINE=InnoDB;
-CREATE TABLE IF NOT EXISTS customer_tags (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
-    name VARCHAR(100) NOT NULL,
-    description VARCHAR(255) NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uq_customer_tag_name (name)
-
-) ENGINE=InnoDB;
-CREATE TABLE IF NOT EXISTS customer_tag_relations (
-    customer_id BIGINT UNSIGNED NOT NULL,
-    tag_id BIGINT UNSIGNED NOT NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (customer_id, tag_id),
-
-    CONSTRAINT fk_ctr_customer
-        FOREIGN KEY (customer_id)
-        REFERENCES customers(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_ctr_tag
-        FOREIGN KEY (tag_id)
-        REFERENCES customer_tags(id)
-        ON DELETE CASCADE
-
-) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS campaigns (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 

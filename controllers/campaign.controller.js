@@ -64,20 +64,99 @@ function validatePayload(body) {
 
 export async function getCampaign(req, res) {
   try {
-    const [rows] = await db.execute(
-      `SELECT id, name, content, status, delay_minutes, interval_seconds
-       FROM campaigns WHERE id = ? AND zalo_account_id = ?`,
-      [Number(req.params.id), req.session.accountId]
+    const campaignId = Number(req.params.id);
+    const accountId = req.session.accountId;
+
+    if (!Number.isSafeInteger(campaignId) || campaignId <= 0) {
+      return res.status(400).json({
+        message: "ID chiến dịch không hợp lệ."
+      });
+    }
+
+    // 1. Lấy thông tin chiến dịch
+    const [campaignRows] = await db.execute(
+      `SELECT
+          id,
+          name,
+          content,
+          status,
+          scheduled_at,
+          delay_minutes,
+          interval_seconds,
+          created_at,
+          started_at,
+          completed_at
+       FROM campaigns
+       WHERE id = ?
+         AND zalo_account_id = ?
+       LIMIT 1`,
+      [campaignId, accountId]
     );
-    if (!rows.length) return res.status(404).json({ message: "Không tìm thấy chiến dịch." });
+
+    if (!campaignRows.length) {
+      return res.status(404).json({
+        message: "Không tìm thấy chiến dịch."
+      });
+    }
+
+    // 2. Lấy thông tin và trạng thái từng khách hàng
     const [recipients] = await db.execute(
-      "SELECT customer_id FROM campaign_customers WHERE campaign_id = ?",
-      [Number(req.params.id)]
+      `SELECT
+          cc.id AS recipient_id,
+          cc.campaign_id,
+          cc.customer_id,
+
+          cu.zalo_user_id,
+          cu.display_name,
+          cu.phone,
+          cu.status AS customer_status,
+          cu.last_interaction_at,
+
+          cc.send_status,
+          cc.view_status,
+          cc.reply_status,
+
+          cc.sent_at,
+          cc.viewed_at,
+          cc.replied_at,
+          cc.error_message
+
+       FROM campaign_customers cc
+
+       INNER JOIN customers cu
+         ON cu.id = cc.customer_id
+
+       WHERE cc.campaign_id = ?
+         AND cu.zalo_account_id = ?
+
+       ORDER BY
+         CASE cc.send_status
+           WHEN 'FAILED' THEN 1
+           WHEN 'PENDING' THEN 2
+           WHEN 'SENDING' THEN 3
+           ELSE 4
+         END,
+         cu.display_name ASC`,
+      [campaignId, accountId]
     );
-    res.json({ ...rows[0], customerIds: recipients.map(row => Number(row.customer_id)) });
+
+    const customerIds = recipients.map(
+      customer => Number(customer.customer_id)
+    );
+
+    // 3. Trả dữ liệu cho trang chi tiết và form sửa chiến dịch
+    return res.json({
+      ...campaignRows[0],
+      customerIds,
+      recipients
+    });
+
   } catch (error) {
-    console.error("[CAMPAIGNS] get:", error);
-    res.status(500).json({ message: "Không thể tải chi tiết chiến dịch." });
+    console.error("[CAMPAIGNS] getCampaign:", error);
+
+    return res.status(500).json({
+      message: "Không thể tải chi tiết chiến dịch."
+    });
   }
 }
 
@@ -100,11 +179,17 @@ export async function createCampaign(req, res) {
     await connection.beginTransaction();
     const [result] = await connection.execute(`
       INSERT INTO campaigns
-        (zalo_account_id, name, content, status, scheduled_at, delay_minutes, interval_seconds)
-      VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE), ?, ?)
+        (
+          zalo_account_id,name,content,status,scheduled_at,
+          delay_minutes,interval_seconds
+        )
+      VALUES (
+        ?,?,?, 'SCHEDULED',
+        DATE_ADD(NOW(), INTERVAL ? MINUTE),
+        ?,?
+      )
     `, [
       accountId, payload.name, payload.content,
-      payload.delayMinutes > 0 ? "SCHEDULED" : "DRAFT",
       payload.delayMinutes, payload.delayMinutes, payload.intervalSeconds
     ]);
 
@@ -150,10 +235,10 @@ export async function updateCampaign(req, res) {
     try {
       await connection.beginTransaction();
       await connection.execute(`
-        UPDATE campaigns SET name=?, content=?, status=?, scheduled_at=DATE_ADD(NOW(), INTERVAL ? MINUTE),
-          delay_minutes=?, interval_seconds=? WHERE id=? AND zalo_account_id=?
-      `, [payload.name, payload.content, payload.delayMinutes > 0 ? "SCHEDULED" : "DRAFT",
-        payload.delayMinutes, payload.delayMinutes, payload.intervalSeconds, id, accountId]);
+        UPDATE campaigns SET name=?, content=?, status= 'SCHEDULED', scheduled_at=DATE_ADD(NOW(), INTERVAL ? MINUTE),
+          delay_minutes=?, interval_seconds=? WHERE id=? AND zalo_account_id=? 
+      `, [payload.name, payload.content,payload.delayMinutes,
+          payload.delayMinutes, payload.intervalSeconds, id, accountId]);
       await connection.execute("DELETE FROM campaign_customers WHERE campaign_id = ?", [id]);
       await connection.query(
         "INSERT INTO campaign_customers (campaign_id, customer_id) VALUES ?",

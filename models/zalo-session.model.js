@@ -1,4 +1,4 @@
-import { Zalo } from "zca-js";
+import { Zalo, ThreadType } from "zca-js";
 import db from "../config/database.js";
 import { decryptCredentials, encryptCredentials } from "../config/credential.js";
 import {
@@ -44,10 +44,10 @@ class ZaloSessionModel {
         credentials,
         false
       );
-      console.log(`[ZALO] restored latest account ${row.id}`);
+      console.log(`[ZALO] Đã khôi phục tài khoản Zalo ${row.id}`);
     } catch (error) {
       console.error(
-        `[ZALO] restore failed for account ${row.id}:`,
+        `[ZALO] Khôi phục thất bại cho tài khoản Zalo ${row.id}:`,
         error.message
       );
       await markStatus(row.id, "EXPIRED", error.message);
@@ -315,6 +315,7 @@ class ZaloSessionModel {
           displayName: info.displayName,
           phone: info.phone
         });
+        await markLatestCampaignReplied(accountId, zaloUserId);
 
         console.log(
           `[ZALO] Customer captured: ${zaloUserId} - ${
@@ -325,7 +326,48 @@ class ZaloSessionModel {
         console.error("[ZALO] message handler error:", error);
       }
     });
+    //Zalo phát sự kiện khi xem
+    api.listener.on("seen_messages", async (messages = []) => {
+      try {
+        const { ThreadType } = await import("zca-js");
+        for (const seen of messages) {
+          if (seen?.type !== ThreadType.User || !seen.threadId) {
+            continue;
+          }
+          const zaloUserId = String (seen.threadId);
 
+          const [result] = await db.execute (
+              `UPDATE campaign_customers AS cc
+              INNER JOIN customers AS c
+                ON c.id = cc.customer_id
+              SET cc.view_status = 'VIEWED',
+                  cc.viewed_at = COALESCE(cc.viewed_at, NOW()),
+                  cc.reply_status = CASE
+                    WHEN cc.reply_status IS NULL
+                      OR cc.reply_status = 'UNKNOWN'
+                      OR cc.reply_status = 'PENDING'
+                    THEN 'NOT_REPLIED'
+                    ELSE cc.reply_status
+                  END
+                WHERE c.zalo_account_id = ?
+                  AND c.zalo_user_id = ?
+                  AND cc.send_status = 'SENT'
+                  AND (
+                    cc.view_status IS NULL
+                    OR cc.view_status <> 'VIEWED'
+                    OR cc.reply_status IS NULL
+                    OR cc.reply_status IN ('UNKNOWN', 'PENDING')
+                  )`,
+                [accountId, zaloUserId]
+              );
+        }
+      } catch (error) {
+        console.error(
+          `[ZALO] seen_messages handler error for account ${accountId}:`,
+          error
+    );
+  }
+});
     api.listener.on("disconnected", async (reason) => {
       console.warn(`[ZALO] account ${accountId} disconnected`, reason);
       await markStatus(
@@ -366,4 +408,59 @@ class ZaloSessionModel {
   }
 }
 
+async function markLatestCampaignViewed(accountId, zaloUserId) {
+  const [rows] = await db.execute(
+    `SELECT cc.id
+     FROM campaign_customers cc
+     INNER JOIN campaigns c ON c.id = cc.campaign_id
+     INNER JOIN customers cu ON cu.id = cc.customer_id
+     WHERE c.zalo_account_id = ?
+       AND cu.zalo_account_id = ?
+       AND cu.zalo_user_id = ?
+       AND cc.send_status = 'SENT'
+       AND cc.view_status <> 'VIEWED'
+     ORDER BY cc.sent_at DESC, cc.id DESC
+     LIMIT 1`,
+    [accountId, accountId, String(zaloUserId)]
+  );
+
+  if (!rows.length) return;
+
+  await db.execute(
+    `UPDATE campaign_customers
+     SET view_status = 'VIEWED',
+         viewed_at = COALESCE(viewed_at, NOW())
+     WHERE id = ?`,
+    [rows[0].id]
+  );
+}
+async function markLatestCampaignReplied(accountId, zaloUserId) {
+  const [rows] = await db.execute(
+    `SELECT cc.id
+     FROM campaign_customers cc
+     INNER JOIN campaigns c ON c.id = cc.campaign_id
+     INNER JOIN customers cu ON cu.id = cc.customer_id
+     WHERE c.zalo_account_id = ?
+       AND cu.zalo_account_id = ?
+       AND cu.zalo_user_id = ?
+       AND cc.send_status = 'SENT'
+       AND cc.sent_at IS NOT NULL
+       AND cc.reply_status <> 'REPLIED'
+     ORDER BY cc.sent_at DESC, cc.id DESC
+     LIMIT 1`,
+    [accountId, accountId, String(zaloUserId)]
+  );
+
+  if (!rows.length) return;
+
+  await db.execute(
+    `UPDATE campaign_customers
+     SET reply_status = 'REPLIED',
+         replied_at = COALESCE(replied_at, NOW()),
+         view_status = 'VIEWED',
+         viewed_at = COALESCE(viewed_at, NOW())
+     WHERE id = ?`,
+    [rows[0].id]
+  );
+}
 export default new ZaloSessionModel();

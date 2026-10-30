@@ -10,6 +10,7 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import campaignRoutes from "./routes/campaign.routes.js";
 import { requireAuth } from "./middleware/auth.middleware.js";
 import zaloSession from "./services/zalo-session.service.js";
+import campaignScheduler from "./services/campaign-scheduler.service.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,12 @@ app.get("/campaigns", requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, "public", "campaigns.html"));
 });
 
+app.get("/campaigns/:id", requireAuth, (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "public", "campaign-detail.html")
+  );
+});
+
 app.get("/", (req, res) => {
   if (req.session?.accountId) return res.redirect("/dashboard");
   res.sendFile(path.join(__dirname, "public", "login.html"));
@@ -57,8 +64,9 @@ app.use((error, req, res, next) => {
 async function start() {
   await pingDatabase();
   await zaloSession.restoreAll();
-
+  campaignScheduler.start();
   app.listen(PORT, () => {
+    console.log("[CAMPAIGN] Tự động gửi chiến dịch đã được bật.");
     console.log(`Zalo CRM running: http://localhost:${PORT}`);
   });
 }

@@ -35,8 +35,6 @@ export async function upsertCustomer({
 }
 
 export function normalizeUserInfo(raw) {
-  console.log("[normalizeUserInfo] raw =", JSON.stringify(raw, null, 2));
-
   let profile = null;
 
   if (raw?.changed_profiles && typeof raw.changed_profiles === "object") {
@@ -47,7 +45,6 @@ export function normalizeUserInfo(raw) {
   if (!profile && raw?.userId) profile = raw;
 
   if (!profile) {
-    console.log("[normalizeUserInfo] Không tìm thấy profile");
     return { zaloUserId: null, displayName: null, phone: null };
   }
 
@@ -57,10 +54,6 @@ export function normalizeUserInfo(raw) {
       profile.displayName ?? profile.zaloName ?? profile.username ?? null,
     phone: profile.phoneNumber || null
   };
-
-  console.log("[normalizeUserInfo] profile =", profile);
-  console.log("[normalizeUserInfo] result =", result);
-
   return result;
 }
 
